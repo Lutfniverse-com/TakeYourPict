@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fotobooth Ceria</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Bangers&family=Pacifico&family=Luckiest+Guy&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3f1ff;--panel:#fff;--ink:#1d1b3a;--mute:#6b6890;--line:#dcd8f5;--pink:#ff4f8b;--sun:#ffd23f;--on-pink:#fff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15132b;--panel:#221f45;--ink:#f2f0ff;--mute:#a9a5d6;--line:#3a3670}}
+:root[data-theme="dark"]{--bg:#15132b;--panel:#221f45;--ink:#f2f0ff;--mute:#a9a5d6;--line:#3a3670}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Fredoka",system-ui,sans-serif;line-height:1.4}
+header{padding:20px 16px 4px;text-align:center}
+h1{margin:0;font-family:"Luckiest Guy","Fredoka",cursive;font-weight:400;font-size:clamp(30px,6vw,48px);letter-spacing:.02em;color:var(--pink);text-shadow:3px 3px 0 var(--sun)}
+header p{margin:6px 0 0;color:var(--mute)}
+main{display:grid;gap:16px;padding:16px;max-width:1100px;margin:0 auto}
+@media(min-width:900px){main{grid-template-columns:minmax(300px,380px) 1fr;align-items:start}.stage{position:sticky;top:12px}}
+.card{background:var(--panel);border:2px solid var(--line);border-radius:18px;padding:14px}
+.stage{display:flex;flex-direction:column;align-items:center;gap:12px}
+#cv{width:100%;max-width:300px;height:auto;border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,.25);background:#fff}
+h2{font-size:17px;margin:0 0 10px}
+.tabs{display:flex;gap:6px;margin-bottom:12px}
+.tabs button{flex:1}
+button,.btn{font:inherit;font-weight:600;border:2px solid var(--line);background:var(--panel);color:var(--ink);padding:9px 14px;border-radius:12px;cursor:pointer}
+button.main,.btn.main{background:var(--pink);border-color:var(--pink);color:var(--on-pink)}
+button.on{border-color:var(--pink);box-shadow:inset 0 0 0 1px var(--pink)}
+button:disabled{opacity:.5;cursor:not-allowed}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.cam{position:relative;background:#000;border-radius:14px;overflow:hidden;aspect-ratio:4/3;display:grid;place-items:center}
+.cam video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.cam .ph{color:#fff;text-align:center;padding:12px;font-size:14px}
+#count{position:absolute;inset:0;display:none;place-items:center;font:96px "Luckiest Guy",cursive;color:#fff;text-shadow:0 4px 12px rgba(0,0,0,.6)}
+#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .35s}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.thumbs button{padding:0;aspect-ratio:4/3;background-size:cover;background-position:center;font-size:13px;color:var(--mute)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:flex;align-items:center;gap:8px;padding:6px 12px 6px 6px}
+.sw{width:26px;height:26px;border-radius:8px;border:2px solid rgba(0,0,0,.15)}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mute)}
+.form .wide{grid-column:1/-1}
+input[type=text],select{font:inherit;padding:8px 10px;border-radius:10px;border:2px solid var(--line);background:var(--bg);color:var(--ink);width:100%}
+input[type=color]{width:100%;height:38px;border:2px solid var(--line);border-radius:10px;background:var(--bg);padding:2px}
+.left{display:grid;gap:16px}
+#msg{font-size:13px;color:var(--pink);min-height:18px;margin-top:8px}
+dialog{border:none;border-radius:18px;padding:16px;background:var(--panel);color:var(--ink);max-width:min(92vw,380px);text-align:center}
+dialog img{max-width:100%;max-height:60vh;border-radius:6px}
+dialog::backdrop{background:rgba(0,0,0,.6)}
+.hide{display:none!important}
+#cv{touch-action:none;cursor:grab}
+input[type=range]{width:100%;accent-color:var(--pink)}
+.pal{display:flex;flex-wrap:wrap;gap:6px}
+.pal button{font-size:22px;padding:4px 8px;line-height:1.2}
+.small{font-size:13px;color:var(--mute);margin:8px 0 0}
+</style>
+</head>
+<body>
+<header>
+<h1>TAKE A PICTURE!</h1>
+<p>3 foto dalam 1 frame. Pilih tema, ambil foto, simpan.</p>
+</header>
+
+<main>
+<div class="left">
+  <section class="card">
+    <h2>1. Ambil foto</h2>
+    <div class="tabs">
+      <button id="tCam" class="on">Kamera</button>
+      <button id="tUp">Unggah foto</button>
+    </div>
+
+    <div id="pCam">
+      <div class="cam">
+        <video id="vid" playsinline muted></video>
+        <div class="ph" id="camPh">Kamera belum menyala</div>
+        <div id="count"></div><div id="flash"></div>
+      </div>
+      <div class="row">
+        <button id="bCam">Nyalakan kamera</button>
+        <button id="bShoot" class="main" disabled>Mulai 3 foto</button>
+      </div>
+    </div>
+
+    <div id="pUp" class="hide">
+      <input id="fUp" type="file" accept="image/*" multiple class="hide">
+      <div class="row"><button id="bUp" class="main">Pilih foto (maks. 3)</button></div>
+      <p class="small">Pilih 3 foto sekaligus, atau ketuk kotak foto di bawah untuk mengganti satu foto.</p>
+    </div>
+
+    <div class="thumbs" id="thumbs"></div>
+    <p class="small">Ketuk kotak foto untuk mengulang atau mengganti foto itu saja.</p>
+    <div id="msg" role="status"></div>
+  </section>
+
+  <section class="card">
+    <h2>Simpan hasil</h2>
+    <div class="row">
+      <button id="bSave" class="main">Simpan foto</button>
+      <button id="bClear">Hapus semua foto</button>
+    </div>
+  </section>
+</div>
+
+<div class="left">
+  <section class="card stage">
+    <canvas id="cv" width="600" height="1500" aria-label="Pratinjau strip foto"></canvas>
+    <p class="small" style="margin:0">Geser emoji langsung di gambar ini.</p>
+  </section>
+</div>
+
+<div class="left" style="grid-column:1/-1">
+  <section class="card">
+    <h2>2. Pilih tema frame</h2>
+    <div class="chips" id="presets"></div>
+    <h2 style="margin-top:14px" id="mineH" class="hide">Frame buatanmu</h2>
+    <div class="chips" id="mine"></div>
+  </section>
+
+  <section class="card">
+    <h2>3. Atur stiker emoji</h2>
+    <p class="small" style="margin:0 0 10px">Seret emoji langsung di pratinjau untuk memindahkannya. Ketuk emoji untuk memilihnya, lalu atur ukuran dan putarannya di sini. Di komputer, scroll mouse di atas emoji untuk membesarkan atau mengecilkannya.</p>
+    <div class="pal" id="pal"></div>
+    <div class="form" style="margin-top:12px">
+      <label class="wide">Tambah emoji lain (tempel atau ketik)<input type="text" id="myEmo" placeholder="contoh: 🐻"></label>
+      <label>Ukuran<input type="range" id="sSize" min="20" max="180" disabled></label>
+      <label>Putar<input type="range" id="sRot" min="-180" max="180" disabled></label>
+    </div>
+    <div class="row">
+      <button id="bAddMy" class="main">Tambahkan</button>
+      <button id="bDelS" disabled>Hapus stiker terpilih</button>
+      <button id="bAuto">Susun ulang otomatis</button>
+      <button id="bClearS">Hapus semua stiker</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>4. Buat atau ubah frame sendiri</h2>
+    <div class="form">
+      <label class="wide">Judul<input type="text" id="title" maxlength="22"></label>
+      <label class="wide">Tulisan bawah<input type="text" id="caption" maxlength="30"></label>
+      <label>Warna atas<input type="color" id="c1"></label>
+      <label>Warna bawah<input type="color" id="c2"></label>
+      <label>Pola latar
+        <select id="pat">
+          <option value="none">Polos</option><option value="dots">Titik</option><option value="stripes">Garis miring</option>
+          <option value="stars">Bintang</option><option value="bubbles">Gelembung</option><option value="halftone">Halftone komik</option>
+          <option value="checker">Kotak-kotak</option><option value="hearts">Hati</option>
+        </select>
+      </label>
+      <label>Warna pola<input type="color" id="patC"></label>
+      <label>Warna bingkai foto<input type="color" id="border"></label>
+      <label>Warna huruf<input type="color" id="text"></label>
+      <label>Garis huruf<input type="color" id="stroke"></label>
+      <label>Gaya huruf
+        <select id="font"><option>Luckiest Guy</option><option>Bangers</option><option>Pacifico</option><option>Fredoka</option></select>
+      </label>
+      <label class="wide">Emoji otomatis (mengubahnya menyusun ulang semua stiker)<input type="text" id="emo" placeholder="contoh: 🐶🍕🌈"></label>
+      <label><span>Tampilkan tanggal</span><select id="showDate"><option value="1">Ya</option><option value="0">Tidak</option></select></label>
+    </div>
+    <div class="row">
+      <input id="fOv" type="file" accept="image/png,image/*" class="hide">
+      <button id="bOv">Pakai gambar frame sendiri (PNG)</button>
+      <button id="bOvX" class="hide">Lepas gambar frame</button>
+      <button id="bSaveFrame" class="main">Simpan frame ini</button>
+    </div>
+    <p class="small">Mau frame dengan karakter favoritmu? Buat PNG transparan berukuran 600×1500 px di aplikasi desain, lalu pasang lewat tombol di atas. Lubang transparan di posisi foto akan menampilkan fotomu.</p>
+  </section>
+</div>
+</main>
+
+<dialog id="dlg">
+  <img id="out" alt="Hasil fotobooth">
+  <p class="small">Jika tombol unduh tidak bekerja, tekan lama gambar lalu pilih simpan.</p>
+  <div class="row" style="justify-content:center">
+    <a id="dl" class="btn main" download="fotobooth.png" href="#">Unduh PNG</a>
+    <button id="dlgX">Tutup</button>
+  </div>
+</dialog>
+
+<script>
+const W=600,H=1500,PAD=44,PW=512,PH=384,TOP=150,GAP=28;
+const $=id=>document.getElementById(id);
+const cv=$('cv'),ctx=cv.getContext('2d');
+
+const PRESETS=[
+{name:'Laut Lucu',title:'SEA PICT!',caption:'Take A Smile in The Sea!',c1:'#6fd3ff',c2:'#1f8fd1',pat:'bubbles',patC:'#ffffff',border:'#ffe14d',text:'#ffe14d',stroke:'#0b5d8f',font:'Luckiest Guy',emo:'🧽🐙🦀🐠🫧⭐'},
+ {name:'Pahlawan Komik',title:'SUPERHEROES',caption:'Selamatkan harimu',c1:'#ff3b3b',c2:'#b3121f',pat:'halftone',patC:'#ffd23f',border:'#ffffff',text:'#ffd23f',stroke:'#1b2a6b',font:'Bangers',emo:'💥🦸⭐🕷️🛡️⚡'},
+ {name:'Kastil Dongeng',title:'Dreams Come True',caption:'Happily ever after',c1:'#ffc2ec',c2:'#8f7bff',pat:'stars',patC:'#ffffff',border:'#ffffff',text:'#ffffff',stroke:'#6a45d6',font:'Pacifico',emo:'👑🏰✨🧚🌟🦄'},
+ {name:'Permen Kawaii',title:'SO CUTIE!',caption:'Manis banget',c1:'#ffd1e8',c2:'#ffb3d1',pat:'hearts',patC:'#ffffff',border:'#ffffff',text:'#ff4f8b',stroke:'#ffffff',font:'Luckiest Guy',emo:'🍓🍭🎀🐰🌸💖'},
+ {name:'Safari Ceria',title:'WELLCOME TO THE JUNGLE!',caption:'Rawr!',c1:'#9be37a',c2:'#2e9c52',pat:'stripes',patC:'#ffffff',border:'#fff7c2',text:'#fff7c2',stroke:'#1e6b37',font:'Luckiest Guy',emo:'🦁🐒🌴🦒🍌🐘'},
+ {name:'Antariksa',title:'MOON MISSION',caption:'Misi selesai',c1:'#1b1464',c2:'#05031f',pat:'stars',patC:'#ffffff',border:'#7df9ff',text:'#7df9ff',stroke:'#3b2fb5',font:'Bangers',emo:'🚀🪐👽🌙☄️'},
+ {name:'Retro Film',title:'TAKE A MOMENT',caption:'Since today',c1:'#2a2a2a',c2:'#111111',pat:'checker',patC:'#ffffff',border:'#f5f5f5',text:'#ffffff',stroke:'#e11d48',font:'Bangers',emo:'📸🎞️🎬'},
+ {name:'Polaroid Putih',title:'Memories',caption:'Momen kita',c1:'#ffffff',c2:'#efefef',pat:'none',patC:'#cccccc',border:'#d9d9d9',text:'#222222',stroke:'#ffffff',font:'Pacifico',emo:''}
+];
+const KEYS=['title','caption','c1','c2','pat','patC','border','text','stroke','font','emo'];
+let cfg={...PRESETS[0],showDate:'1'};
+let photos=[null,null,null],overlay=null,stream=null,busy=false,mine=[];
+let stickers=[],selected=-1;
+const EMOJI_FONT='"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+function layoutStickers(){
+  const emos=graphemes(cfg.emo||'');stickers=[];selected=-1;syncSel();
+  if(!emos.length)return;
+  const r=rnd(hash(cfg.emo+cfg.title)),pts=[];
+  for(let i=0;i<3;i++){const y=TOP+i*(PH+GAP);pts.push([PAD,y],[W-PAD,y],[PAD,y+PH],[W-PAD,y+PH])}
+  pts.sort(()=>r()-.5);
+  pts.slice(0,8).concat([[52,70],[W-52,70],[60,H-55],[W-60,H-55]]).forEach(([x,y])=>{
+    stickers.push({e:emos[Math.floor(r()*emos.length)],x,y,size:40+Math.round(r()*22),rot:(r()-.5)*.7});
+  });
+}
+
+function rnd(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function hash(s){let h=2166136261;for(const ch of s){h^=ch.codePointAt(0);h=Math.imul(h,16777619)}return h}
+function graphemes(s){s=s.replace(/\s+/g,'');if(window.Intl&&Intl.Segmenter)return Array.from(new Intl.Segmenter().segment(s),x=>x.segment);return[...s]}
+function rr(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath()}
+function star(c,x,y,r){c.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,d=i%2?r*.45:r;c.lineTo(x+Math.cos(a)*d,y+Math.sin(a)*d)}c.closePath();c.fill()}
+
+function pattern(c){
+  c.save();c.globalAlpha=.35;c.fillStyle=c.strokeStyle=cfg.patC;
+  const p=cfg.pat;
+  if(p==='dots'){for(let y=20;y<H;y+=44)for(let x=(y/44%2?22:0)+10;x<W;x+=44){c.beginPath();c.arc(x,y,7,0,7);c.fill()}}
+  else if(p==='stripes'){c.lineWidth=20;for(let i=-H;i<W+H;i+=56){c.beginPath();c.moveTo(i,0);c.lineTo(i+H*.6,H);c.stroke()}}
+  else if(p==='stars'){const r=rnd(7);for(let i=0;i<70;i++)star(c,r()*W,r()*H,4+r()*12)}
+  else if(p==='bubbles'){const r=rnd(3);c.lineWidth=3;for(let i=0;i<55;i++){c.beginPath();c.arc(r()*W,r()*H,8+r()*26,0,7);c.stroke()}}
+  else if(p==='halftone'){for(let y=12;y<H;y+=26)for(let x=(y/26%2?13:0);x<W+13;x+=26){const s=Math.max(.5,10*(1-y/H));c.beginPath();c.arc(x,y,s,0,7);c.fill()}}
+  else if(p==='checker'){for(let y=0;y<H;y+=50)for(let x=0;x<W;x+=50)if((x+y)/50%2===0)c.fillRect(x,y,50,50)}
+  else if(p==='hearts'){c.font='34px sans-serif';c.textAlign='center';for(let y=30;y<H+30;y+=64)for(let x=(y/64%2?32:0)+6;x<W+30;x+=64)c.fillText('♥',x,y)}
+  c.restore();
+}
+
+function render(){
+  const c=ctx;
+  const g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,cfg.c1);g.addColorStop(1,cfg.c2);
+  c.fillStyle=g;c.fillRect(0,0,W,H);pattern(c);
+
+  for(let i=0;i<3;i++){
+    const y=TOP+i*(PH+GAP);
+    c.save();c.shadowColor='rgba(0,0,0,.3)';c.shadowBlur=14;c.shadowOffsetY=5;
+    rr(c,PAD,y,PW,PH,14);c.fillStyle=cfg.border;c.fill();c.restore();
+    c.save();rr(c,PAD+7,y+7,PW-14,PH-14,9);c.clip();
+    if(photos[i])c.drawImage(photos[i],PAD+7,y+7,PW-14,PH-14);
+    else{c.fillStyle='rgba(255,255,255,.55)';c.fillRect(PAD+7,y+7,PW-14,PH-14);c.fillStyle='rgba(0,0,0,.4)';c.font='600 34px Fredoka,sans-serif';c.textAlign='center';c.fillText('Foto '+(i+1),W/2,y+PH/2+10)}
+    c.restore();
+  }
+
+  for(const s of stickers){
+    c.save();c.translate(s.x,s.y);c.rotate(s.rot);
+    c.font=`${s.size}px ${EMOJI_FONT}`;c.textAlign='center';c.textBaseline='middle';
+    c.fillText(s.e,0,0);c.restore();
+  }
+
+  c.textAlign='center';c.textBaseline='alphabetic';c.lineJoin='round';
+  if(cfg.title){
+    let s=70;const fam=`"${cfg.font}",cursive`;
+    c.font=`${s}px ${fam}`;
+    while(c.measureText(cfg.title).width>400&&s>20){s-=2;c.font=`${s}px ${fam}`}
+    c.lineWidth=12;c.strokeStyle=cfg.stroke;c.strokeText(cfg.title,W/2,TOP/2+s*.35);
+    c.fillStyle=cfg.text;c.fillText(cfg.title,W/2,TOP/2+s*.35);
+  }
+  const fy=TOP+3*PH+2*GAP;
+  c.font='600 30px Fredoka,sans-serif';c.lineWidth=8;c.strokeStyle=cfg.stroke;c.fillStyle=cfg.text;
+  if(cfg.caption){c.strokeText(cfg.caption,W/2,fy+62);c.fillText(cfg.caption,W/2,fy+62)}
+  if(cfg.showDate==='1'){
+    c.font='600 22px Fredoka,sans-serif';c.lineWidth=6;
+    const d=new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+    c.strokeText(d,W/2,fy+98);c.fillText(d,W/2,fy+98);
+  }
+  if(overlay)c.drawImage(overlay,0,0,W,H);
+  const sel=stickers[selected];
+  if(sel){c.save();c.translate(sel.x,sel.y);c.lineWidth=3;c.setLineDash([8,6]);c.strokeStyle='#fff';c.beginPath();c.arc(0,0,Math.max(sel.size*.7,26),0,7);c.stroke();c.strokeStyle='#ff4f8b';c.lineDashOffset=7;c.stroke();c.restore()}
+}
+
+/* ---------- foto ---------- */
+function cover(c,src,sw,sh,dw,dh,mirror){
+  const s=Math.max(dw/sw,dh/sh),w=sw*s,h=sh*s;
+  c.save();if(mirror){c.translate(dw,0);c.scale(-1,1)}
+  c.drawImage(src,(dw-w)/2,(dh-h)/2,w,h);c.restore();
+}
+function setPhoto(i,canvas){photos[i]=canvas;thumbs();render()}
+function thumbs(){
+  const t=$('thumbs');t.innerHTML='';
+  for(let i=0;i<3;i++){
+    const b=document.createElement('button');
+    b.setAttribute('aria-label','Foto '+(i+1));
+    if(photos[i]){b.style.backgroundImage=`url(${photos[i].toDataURL('image/jpeg',.5)})`}else b.textContent='Foto '+(i+1);
+    b.onclick=()=>slotClick(i);t.appendChild(b);
+  }
+}
+function msg(t){$('msg').textContent=t||''}
+function slotClick(i){
+  if(busy)return;
+  if(!$('pUp').classList.contains('hide')||!stream){pickSlot=i;$('fUp').multiple=false;$('fUp').click();return}
+  shoot([i]);
+}
+let pickSlot=null;
+
+/* ---------- kamera ---------- */
+async function startCam(){
+  msg('');
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:1280},height:{ideal:960}},audio:false});
+    const v=$('vid');v.srcObject=stream;await v.play();
+    $('camPh').classList.add('hide');$('bShoot').disabled=false;$('bCam').textContent='Matikan kamera';
+  }catch(e){
+    stream=null;msg('Kamera tidak bisa dibuka. Izinkan akses kamera di browser, atau pakai tab Unggah foto.');
+  }
+}
+function stopCam(){if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;$('vid').srcObject=null;$('camPh').classList.remove('hide');$('bShoot').disabled=true;$('bCam').textContent='Nyalakan kamera'}
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+async function shoot(slots){
+  if(!stream||busy)return;busy=true;$('bShoot').disabled=true;
+  const cd=$('count'),fl=$('flash'),v=$('vid');
+  for(const i of slots){
+    for(let n=3;n>0;n--){cd.style.display='grid';cd.textContent=n;await wait(1000)}
+    cd.style.display='none';
+    const c=document.createElement('canvas');c.width=800;c.height=600;
+    cover(c.getContext('2d'),v,v.videoWidth,v.videoHeight,800,600,true);
+    fl.style.opacity=1;setTimeout(()=>fl.style.opacity=0,80);
+    setPhoto(i,c);await wait(700);
+  }
+  busy=false;$('bShoot').disabled=false;
+}
+
+/* ---------- unggah ---------- */
+function readImg(file){return new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>ok(im);im.onerror=no;im.src=r.result};r.onerror=no;r.readAsDataURL(file)})}
+$('fUp').onchange=async e=>{
+  const files=[...e.target.files].slice(0,3);e.target.value='';
+  try{
+    let slots;
+    if(pickSlot!==null){slots=[pickSlot];pickSlot=null}
+    else if(files.length===1){const k=photos.findIndex(p=>!p);slots=[k<0?0:k]}
+    else slots=[0,1,2];
+    for(let j=0;j<files.length&&j<slots.length;j++){
+      const im=await readImg(files[j]);
+      const c=document.createElement('canvas');c.width=800;c.height=600;
+      cover(c.getContext('2d'),im,im.naturalWidth,im.naturalHeight,800,600,false);
+      setPhoto(slots[j],c);
+    }
+    msg('');
+  }catch(err){msg('Foto tidak bisa dibaca. Coba file JPG atau PNG lain.')}
+  $('fUp').multiple=true;
+};
+
+/* ---------- frame ---------- */
+function syncForm(){KEYS.forEach(k=>$(k).value=cfg[k]);$('showDate').value=cfg.showDate}
+function chip(f,list,onDel){
+  const b=document.createElement('button');b.className='chip';
+  b.innerHTML=`<span class="sw"></span>`;
+  b.firstChild.style.background=`linear-gradient(${f.c1},${f.c2})`;
+  b.append(f.name);
+  b.onclick=()=>{cfg={...f,showDate:cfg.showDate};syncForm();layoutStickers();render()};
+  list.appendChild(b);
+}
+function drawChips(){
+  $('presets').innerHTML='';PRESETS.forEach(f=>chip(f,$('presets')));
+  $('mine').innerHTML='';mine.forEach(f=>chip(f,$('mine')));
+  $('mineH').classList.toggle('hide',!mine.length);
+}
+KEYS.concat(['showDate']).forEach(k=>{$(k).addEventListener('input',()=>{cfg[k]=$(k).value;if(k==='emo')layoutStickers();render()})});
+$('bSaveFrame').onclick=()=>{
+  const name=(cfg.title||'Frame')+' '+(mine.length+1);
+  mine.push({...cfg,name});
+  try{localStorage.setItem('fb_frames',JSON.stringify(mine))}catch(e){}
+  drawChips();msg('Frame disimpan di daftar “Frame buatanmu”.');
+};
+$('bOv').onclick=()=>$('fOv').click();
+$('fOv').onchange=async e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;
+  try{overlay=await readImg(f);$('bOvX').classList.remove('hide');render()}catch(err){msg('Gambar frame tidak bisa dibaca.')}
+};
+$('bOvX').onclick=()=>{overlay=null;$('bOvX').classList.add('hide');render()};
+
+/* ---------- tombol ---------- */
+$('tCam').onclick=()=>{$('tCam').classList.add('on');$('tUp').classList.remove('on');$('pCam').classList.remove('hide');$('pUp').classList.add('hide')};
+$('tUp').onclick=()=>{$('tUp').classList.add('on');$('tCam').classList.remove('on');$('pUp').classList.remove('hide');$('pCam').classList.add('hide')};
+$('bCam').onclick=()=>stream?stopCam():startCam();
+$('bShoot').onclick=()=>shoot([0,1,2]);
+$('bUp').onclick=()=>{pickSlot=null;$('fUp').multiple=true;$('fUp').click()};
+$('bClear').onclick=()=>{photos=[null,null,null];thumbs();render()};
+$('bSave').onclick=()=>{
+  const keep=selected;selected=-1;render();const url=cv.toDataURL('image/png');selected=keep;render();
+  $('out').src=url;$('dl').href=url;$('dlg').showModal();
+};
+$('dlgX').onclick=()=>$('dlg').close();
+
+/* ---------- stiker: geser, ubah ukuran, putar ---------- */
+function syncSel(){
+  const s=stickers[selected];
+  ['sSize','sRot','bDelS'].forEach(id=>$(id).disabled=!s);
+  if(s){$('sSize').value=s.size;$('sRot').value=Math.round(s.rot*180/Math.PI)}
+}
+function addSticker(e){
+  stickers.push({e,x:W/2,y:H/2,size:80,rot:0});
+  selected=stickers.length-1;syncSel();render();
+}
+const PAL=['😀','😍','🥳','😎','🤪','😜','🔥','💖','⭐','✨','🌈','🎀','🐶','🐱','🐼','🦄','🍕','🍓','🎈','👑','💥','🚀','🌸','🦋'];
+PAL.forEach(e=>{const b=document.createElement('button');b.textContent=e;b.setAttribute('aria-label','Tambah stiker '+e);b.onclick=()=>addSticker(e);$('pal').appendChild(b)});
+$('bAddMy').onclick=()=>{const g=graphemes($('myEmo').value);if(g.length){addSticker(g[0]);$('myEmo').value=''}};
+$('bDelS').onclick=()=>{if(stickers[selected]){stickers.splice(selected,1);selected=-1;syncSel();render()}};
+$('bClearS').onclick=()=>{stickers=[];selected=-1;syncSel();render()};
+$('bAuto').onclick=()=>{layoutStickers();render()};
+$('sSize').addEventListener('input',()=>{const s=stickers[selected];if(s){s.size=+$('sSize').value;render()}});
+$('sRot').addEventListener('input',()=>{const s=stickers[selected];if(s){s.rot=$('sRot').value*Math.PI/180;render()}});
+
+function cpos(e){const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height]}
+let drag=null;
+cv.addEventListener('pointerdown',e=>{
+  const [x,y]=cpos(e);let hit=-1;
+  for(let i=stickers.length-1;i>=0;i--){const s=stickers[i];if(Math.hypot(x-s.x,y-s.y)<=Math.max(s.size*.65,28)){hit=i;break}}
+  if(hit<0){selected=-1;syncSel();render();return}
+  const s=stickers.splice(hit,1)[0];stickers.push(s);selected=stickers.length-1;
+  drag={dx:s.x-x,dy:s.y-y};cv.setPointerCapture(e.pointerId);cv.style.cursor='grabbing';
+  syncSel();render();
+});
+cv.addEventListener('pointermove',e=>{
+  if(!drag)return;const [x,y]=cpos(e),s=stickers[selected];if(!s)return;
+  s.x=Math.min(W,Math.max(0,x+drag.dx));s.y=Math.min(H,Math.max(0,y+drag.dy));render();
+});
+const endDrag=()=>{drag=null;cv.style.cursor='grab'};
+cv.addEventListener('pointerup',endDrag);cv.addEventListener('pointercancel',endDrag);
+cv.addEventListener('wheel',e=>{
+  const s=stickers[selected];if(!s)return;e.preventDefault();
+  s.size=Math.min(180,Math.max(20,s.size+(e.deltaY<0?6:-6)));syncSel();render();
+},{passive:false});
+document.addEventListener('keydown',e=>{
+  if((e.key==='Delete'||e.key==='Backspace')&&stickers[selected]&&!/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)){
+    stickers.splice(selected,1);selected=-1;syncSel();render();
+  }
+});
+
+/* ---------- mulai ---------- */
+try{mine=JSON.parse(localStorage.getItem('fb_frames')||'[]')||[]}catch(e){mine=[]}
+syncForm();drawChips();thumbs();layoutStickers();render();
+if(document.fonts){Promise.all(['Luckiest Guy','Bangers','Pacifico','Fredoka'].map(f=>document.fonts.load(`40px "${f}"`))).then(render).catch(()=>{})}
+</script>
+</body>
+</html>
